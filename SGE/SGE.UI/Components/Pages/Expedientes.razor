@@ -1,0 +1,211 @@
+﻿@page "/expedientes/{IdUsuario}"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation;
+@inject CasoDeUsoUsuarioConsultaPorId usuarioConsultaId
+@inject CasoDeUsoUsuarioConsultaPermisos usuarioConsultaPermisos
+@inject CasoDeUsoExpedienteConsultaTodos expedienteConsultaTodos
+@inject CasoDeUsoExpedienteConsultaPorId expedienteConsultaId
+@inject CasoDeUsoExpedienteAlta expedienteAlta
+@inject CasoDeUsoExpedienteBaja expedienteBaja
+@inject CasoDeUsoExpedienteModificacion expedienteModificacion
+
+<PageTitle>Expedientes | SGE</PageTitle>
+<section class="seccion-paginas">
+    <Excepcion @ref="ventanaExcepcion"/>
+    <h1>Expedientes</h1>
+    <div class="contenedor">
+        <div class="formularios">
+            @if (operacion == "Alta"){
+                <form @onsubmit="DarDeAlta">
+                    <div class="elemento-input">
+                        <h4>Caratula</h4>
+                        <input type="text" @bind="_caratula" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="boton-inicio">Confirmar</button>
+                    </div>
+                </form>
+            }
+            @if (operacion == "Baja"){
+            <form @onsubmit="DarDeBaja">
+                <div class="elemento-input">
+                    <h4>ID Expediente</h4>
+                    <input type="number" @bind="_idExpediente" placeholder="ID Expediente" required>
+                </div>
+                <div>
+                    <button type="submit" class="boton-inicio">Confirmar</button>
+                </div>
+            </form>
+            }
+            @if (operacion == "Modificacion"){
+                <form @onsubmit="Modificar">
+                   <div class="elemento-input">
+                        <h4>ID Expediente</h4>
+                        <input type="number" @bind="_idExpediente" required>
+                    </div>
+                    <div class="elemento-input">
+                        <h4>Caratula</h4>
+                        <input type="text" @bind="_caratula" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="boton-inicio">Confirmar</button>
+                    </div>
+                </form>
+            }
+            @if (operacion == "BusquedaID"){
+                <form @onsubmit="BuscarPorID">
+                   <div class="elemento-input">
+                        <h4>ID Expediente</h4>
+                        <input type="number" @bind="_idExpediente" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="boton-inicio">Confirmar</button>
+                    </div>
+                </form>
+            }
+        </div>
+        <div class="mostrar-datos">
+            @if (consultaID == null){
+                @if (expedientes != null){
+                    @foreach (var ex in expedientes){
+                        <div class="detalle">
+                            <span>| ID: @ex.Id</span>
+                            <span>| CARATULA: @ex.Caratula</span>
+                            <span>| CREACION: @ex.FechaCreacion</span>
+                            <span>| ULTIMA MODIFICACION: @ex.FechaModificacion</span>
+                            <span>| ID USUARIO MODIFICADOR: @ex.IdUsuarioModificador</span>
+                            <span>| ESTADO: @ex.Estado</span>
+                            <hr style="border: 1px solid black;">
+                        </div>
+                    }
+                }
+            }
+            @if (consultaID != null){
+                @if (operacion == "BusquedaID"){
+                    <div class="detalle">
+                        @if (consultaID.Expediente != null){
+                            <span>| ID: @consultaID.Expediente.Id</span>
+                            <span>| CARATULA: @consultaID.Expediente.Caratula</span>
+                            <span>| CREACION: @consultaID.Expediente.FechaCreacion</span>
+                            <span>| ULTIMA MODIFICACION: @consultaID.Expediente.FechaModificacion</span>
+                            <span>| ID USUARIO MODIFICADOR: @consultaID.Expediente.IdUsuarioModificador</span>
+                            <span>| ESTADO: @consultaID.Expediente.Estado</span>
+                            <hr style="border: 1px solid black;">
+                        }
+                        @if (consultaID.ListaTramites != null){
+                            @foreach (var x in consultaID.ListaTramites){
+                                <div class="detalle-tramite">
+                                    <span>Id del trámite: @x.Id</span>
+                                    <span>|Id del expediente: @x.ExpedienteId</span>
+                                    <span>|Etiqueta del trámite: @x.EtiquetaTramite</span>
+                                    <span>|Contenido: @x.Contenido</span>
+                                    <span>|Fecha de creación: @x.FechaCreacion</span>
+                                    <span>|Fecha de modificación: @x.FechaModificacion</span>
+                                    <span>|Id del usuario modificador: @x.IdUsuarioModificador |</span>
+                                    <hr style="border: 1px solid black;">
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+            }
+        </div>   
+    </div>
+    <div class="contenedor-botones">
+        @if (permisoAlta) {
+            <button class="boton-inicio" @onclick="setAlta">Dar de alta</button>
+        }
+        @if (permisoBaja) {
+            <button class="boton-inicio" @onclick="setBaja">Dar de baja</button>
+        }
+        @if (permisoModificacion){ 
+            <button class="boton-inicio" @onclick="setModificar">Modificar</button>
+        }
+        <button class="boton-inicio" @onclick="setBusquedaId">Consulta Expediente y Tramites</button>
+        <button class="boton-inicio" @onclick="RefreshPage">Recargar Expedientes</button>
+    </div>
+</section>
+@code{
+    private List<Expediente>? expedientes;
+    private ConsultaExpediente consultaID;
+    private bool permisoAlta = false;
+    private bool permisoBaja = false;
+    private bool permisoModificacion = false;
+    [Parameter] public string? IdUsuario {get;set;}
+    private int userId;
+    private int _idExpediente;
+    private string? _caratula;
+    private string? operacion;
+    private Excepcion ventanaExcepcion = null!;
+
+    protected override void OnInitialized(){
+        userId = int.Parse(IdUsuario!);
+        Usuario user = usuarioConsultaId.Ejecutar(userId!);
+        List<string> permisos = usuarioConsultaPermisos.Ejecutar(userId!);
+        if (permisos.Contains("ExpedienteAlta")) permisoAlta = true;
+        if (permisos.Contains("ExpedienteBaja")) permisoBaja = true;
+        if (permisos.Contains("ExpedienteModificacion"))permisoModificacion = true;
+        expedientes = expedienteConsultaTodos.Ejecutar();
+    }
+
+    private void DarDeAlta(){
+        try{
+            expedienteAlta.Ejecutar(_caratula!,userId!);
+            RefreshPage();
+        }catch(ValidacionException ex){ // en caso que la caratula sea invalida
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+        catch(AutorizacionException ex){// en caso de que tenga permisos (caso imposible de que pase)
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+    }
+    private void DarDeBaja(){
+        try{
+            expedienteBaja.Ejecutar(_idExpediente!, userId!);
+            RefreshPage();
+        }catch(RepositorioException ex){ // en caso de que no exista en el repo
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+        catch(AutorizacionException ex){// en caso de que tenga permisos (caso imposible de que pase)
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+    }
+    private void Modificar(){
+        try{
+            expedienteModificacion.Ejecutar(_idExpediente!, _caratula!, userId!);
+            RefreshPage();
+         }catch(ValidacionException ex){ // en caso que la caratula sea invalida
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+        catch(AutorizacionException ex){// en caso de que tenga permisos (caso imposible de que pase)
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+        catch(RepositorioException ex){ // en caso de que no exista en el repo
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+    }
+    private void BuscarPorID(){
+        try{
+            consultaID = expedienteConsultaId.Ejecutar(_idExpediente!);
+        }
+        catch(RepositorioException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+    }
+
+    private void setAlta(){
+        operacion = "Alta";
+    }
+    private void setBaja(){
+        operacion = "Baja";
+    }
+    private void setModificar(){
+        operacion = "Modificacion";
+    }
+    private void setBusquedaId(){
+        operacion = "BusquedaID";
+    }
+    private void RefreshPage(){
+        Navigation.NavigateTo($"/expedientes/{IdUsuario}", forceLoad: true);
+    }
+}

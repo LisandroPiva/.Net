@@ -1,0 +1,52 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject CasoDeUsoUsuarioIniciarSesion iniciarSesion
+
+<PageTitle>Iniciar Sesion | SGE</PageTitle>
+
+<section class="seccion-formulario">
+    <Excepcion @ref="ventanaExcepcion"/>
+    <div class="contenedor-formulario">
+        <h1 class="titulo">Iniciar Sesion</h1>
+        <form class="form" @onsubmit="Ejecutar">
+            <div class="elemento-input">
+                <input type="email" @bind="_email" id="input-email" placeholder="Email" required>
+            </div>
+            <div class="elemento-input">
+                <input type="password" @bind="_password" id="input-password" placeholder="Contraseña" required>
+            </div>
+            <div>
+                <button type="submit" class="boton-inicio">Iniciar Sesion</button>
+            </div>
+            <div>
+                <a @onclick="OlvidarConstraseña">¿Olvidaste la contraseña?</a>
+            </div>
+            <div>
+                <a href="registrarusuario">Registrarse</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+
+@code{
+    private string? _email;
+    private string? _password;
+    private Usuario? usuarioAct;
+    private Excepcion ventanaExcepcion = null!;
+
+    private void Ejecutar(){
+        try{
+            usuarioAct = iniciarSesion.Ejecutar(_email!,_password!);
+            Navigation.NavigateTo($"/home/{usuarioAct.IdUsuario}");
+        }
+        catch(RepositorioException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+    }
+
+    private void OlvidarConstraseña(){
+        ventanaExcepcion.CargarYMostrar("Contactar con el administrador");
+    }
+}

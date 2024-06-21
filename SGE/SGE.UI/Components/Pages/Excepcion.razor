@@ -1,0 +1,40 @@
+@rendermode InteractiveServer
+@if(visible)
+{
+    <div class="dialogo-contenedor">
+        <div class="dialogo-contenido">
+            <h3>@Mensaje</h3>
+            <button class="boton" @onclick="CerrarVentana">Aceptar</button>
+        </div>
+    </div>
+}
+
+@code{
+    private bool visible = false;
+    private string mensaje = "";
+
+    public void CargarContenido(string mensaje)
+    {
+        this.mensaje = mensaje;
+    }
+
+    public void Mostrar()
+    {
+        visible = true;
+        StateHasChanged();
+    }
+
+    public void CargarYMostrar(string mensaje)
+    {
+        CargarContenido(mensaje);
+        Mostrar();
+    }
+
+    private void CerrarVentana()
+    {
+        visible = false;
+        StateHasChanged();
+    }
+
+    public string Mensaje => mensaje;
+}

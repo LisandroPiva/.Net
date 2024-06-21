@@ -1,0 +1,61 @@
+﻿@page "/modificar-perfil/{IdUsuario}"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject CasoDeUsoUsuarioModificacion usuarioModificacion
+@inject CasoDeUsoUsuarioConsultaPorId usuarioConsultaId
+
+
+<PageTitle>Modificar Perfil | SGE</PageTitle>
+
+<section class="seccion-modificar-datos">
+    <Excepcion @ref="ventanaExcepcion"/>
+    <h1 class="titulo">Modificar datos</h1>
+    <form class="form" @onsubmit="Ejecutar">
+        <div class="elemento-input">
+            <input type="text" @bind="_nombre" id="input-nombre" placeholder=" Nombre" required>
+        </div>
+        <div class="elemento-input">
+            <input type="text" @bind="_apellido" id="input-apellido" placeholder=" Apellido" required>
+        </div>
+        <div class="elemento-input">
+            <input type="email" @bind="_email" id="input-email" placeholder=" Email" required>
+        </div>
+        <div class="elemento-input">
+            <input type="password" @bind="_password" id="input-password" placeholder=" Contraseña" required>
+        </div>
+        <div>
+            <button type="submit" class="boton-inicio">Modificar</button>
+        </div>
+    </form>
+
+</section>
+
+@code {
+    [Parameter] public string? IdUsuario { get; set; }
+    private int userId;
+    private string? _nombre;
+    private string? _apellido;
+    private string? _email;
+    private string? _password;
+    Excepcion ventanaExcepcion = null!;
+    private List<Permiso.Permisos>? permisos;
+
+    protected override void OnParametersSet(){
+        int.TryParse(IdUsuario, out userId);
+    }
+    private void Ejecutar (){
+        try{
+            permisos = usuarioConsultaId.Ejecutar(userId).Permisos;
+            usuarioModificacion.Ejecutar(userId, _nombre!,_apellido!,_email!,_password!,permisos);
+            Navigation.NavigateTo("/");
+        }
+        catch(RepositorioException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+        catch(ValidacionException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+    }
+}
+
+

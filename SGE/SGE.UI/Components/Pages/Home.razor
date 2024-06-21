@@ -1,0 +1,44 @@
+@page "/home/{IdUsuario}"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject ServicioAutorizacion autorizacion
+
+<PageTitle>Home | SGE</PageTitle>
+
+<section class="seccion-home">
+    <div class="modificar">
+        <button class="boton-mod" @onclick="RedirigirModificar"><img src="images/config.png" alt="">Modificar perfil</button>
+    </div>
+    <h1>¿Que operacion queres realizar?</h1>
+    <div class="operaciones">
+        <button class="boton-op" @onclick="RedirigirExpedientes">Ver Expedientes</button>
+        <button class="boton-op" @onclick="RedirigirTramites">Ver Tramites</button>
+        @if (EsAdmin){
+            <button class="boton-op" @onclick="RedirigirUsuarios">Ver Usuarios</button>
+        }
+    </div>
+</section>
+
+@code{
+    [Parameter] public string? IdUsuario { get; set; }
+    private bool EsAdmin = false;
+    private int userId;
+
+    protected override void OnParametersSet(){
+        int.TryParse(IdUsuario, out userId);
+        EsAdmin = autorizacion.EsAdmin(userId);
+    }
+
+    private void RedirigirExpedientes(){
+        Navigation.NavigateTo($"/expedientes/{IdUsuario}");
+    }
+    private void RedirigirTramites(){
+        Navigation.NavigateTo($"/tramites/{IdUsuario}");
+    }
+    private void RedirigirUsuarios(){
+        Navigation.NavigateTo($"/usuarios/{IdUsuario}");
+    }
+    private void RedirigirModificar(){
+        Navigation.NavigateTo($"/modificar-perfil/{IdUsuario}");
+    }
+}

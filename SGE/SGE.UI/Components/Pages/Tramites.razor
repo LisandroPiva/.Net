@@ -1,0 +1,261 @@
+﻿@page "/tramites/{IdUsuario}"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject CasoDeUsoUsuarioConsultaPorId usuarioConsultaId
+@inject CasoDeUsoUsuarioConsultaPermisos usuarioConsultaPermisos
+@inject CasoDeUsoTramiteConsultaTodos tramiteConsultaTodos
+@inject CasoDeUsoTramiteConsultaPorEtiqueta tramiteConsultaEtiqueta
+@inject CasoDeUsoTramiteAlta tramiteAlta
+@inject CasoDeUsoTramiteBaja tramiteBaja
+@inject CasoDeUsoTramiteModificacion tramiteModificacion
+
+
+<PageTitle>Trámites | SGE</PageTitle>
+
+
+<section class="seccion-paginas">
+    <Excepcion @ref="ventanaExcepcion"/>
+    <h1>Trámites</h1>
+    <div class="contenedor">
+        <div class="formularios"> 
+            @if (operacion == "Alta"){
+                <form @onsubmit="DarAltaTramite">
+                    <div class="elemento-input">
+                        <h4>ID Expediente</h4>
+                        <input type="number" @bind="_expedienteId" required>
+                    </div>
+                    <div class="elemento-input">
+                        <h4>Contenido</h4>
+                        <input type="text" @bind="_contenido" required>
+                    </div>
+                    <div>
+                        <label for="etiqueta">Etiqueta</label>
+                        <select class="etiqueta" @bind="_etiqueta" required>
+                            <option value="EscritoPresentado">Escrito presentado</option>
+                            <option value="Despacho">Despacho</option>
+                            <option value="Notificacion">Notificacion</option>
+                            <option value="Resolucion">Resolución</option>
+                            <option value="PaseAEstudio">Pase a Estudio</option>
+                            <option value="PaseAlArchivo">Pase al Archivo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit" class="boton-inicio">Confirmar</button>
+                    </div>
+                </form>
+            }
+            @if (operacion == "Baja"){
+                <form @onsubmit="DarBajaTramite">
+                    <div class="elemento-input">
+                        <h4>ID Tramite</h4>
+                        <input type="number" @bind="_idTramiteABajar" placeholder="ID Trámite a dar de baja" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="boton-inicio">Confirmar</button>
+                    </div>
+                </form>
+            } 
+             @if (operacion == "Modificacion"){
+                <form @onsubmit="ModificarTramite">
+                    <div class="elemento-input">
+                        <h4>ID Tramite</h4>
+                        <input type="number" @bind="_idTramiteAModificar" required>
+                    </div>
+                    <div class="elemento-input">
+                        <h4>Contenido</h4>
+                        <input type="textbox" @bind="_contenidoAModificar" required>
+                    </div>
+                    <div>
+                        <label for="etiqueta">Etiqueta</label>
+                        <select class="etiqueta" @bind="_etiquetaModificada" required>
+                            <option value="EscritoPresentado">Escrito presentado</option>
+                            <option value="Despacho">Despacho</option>
+                            <option value="Notificacion">Notificacion</option>
+                            <option value="Resolucion">Resolución</option>
+                            <option value="PaseAEstudio">Pase a Estudio</option>
+                            <option value="PaseAlArchivo">Pase al Archivo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit" class="boton-inicio">Confirmar</button>
+                    </div>
+                </form>
+            }
+            @if (operacion == "ConsultarE"){
+                <form @onsubmit="ConsultarEtiqueta">
+                    <div>
+                        <label for="etiqueta">Etiqueta:</label>
+                        <select class="etiqueta" @bind="_etiquetaConsultada" required>
+                            <option value="EscritoPresentado">Escrito presentado</option>
+                            <option value="Despacho">Despacho</option>
+                            <option value="Notificacion">Notificacion</option>
+                            <option value="Resolucion">Resolución</option>
+                            <option value="PaseAEstudio">Pase a Estudio</option>
+                            <option value="PaseAlArchivo">Pase al Archivo</option>
+                            <hr style="border: 1px solid black;">
+                        </select>
+                        
+                    </div>
+                    <button type="submit" class="boton-inicio">Buscar</button>
+                </form>
+            }
+        </div> 
+        <div class="mostrar-datos">
+            @if (TramitesConsultados == null){
+                @if (tramites != null){
+                    @foreach (var tramite in tramites){
+                        <div class="detalle-tramite">
+                            <span>| ID: @tramite.Id</span>
+                            <span>| ID EXPEDIENTE: @tramite.ExpedienteId</span>
+                            <span>| ETIQUETA: @tramite.EtiquetaTramite</span>
+                            <span>| CONTENIDO: @tramite.Contenido</span>
+                            <span>| CREACION: @tramite.FechaCreacion</span>
+                            <span>| ULTIMA MODIFICACION: @tramite.FechaModificacion</span>
+                            <span>| ID USUARIO MODIFICADOR: @tramite.IdUsuarioModificador</span>
+                            <hr style="border: 1px solid black;">
+                        </div>
+                    }
+                }
+            }
+            @if (TramitesConsultados != null){
+                @if(operacion == "ConsultarE"){
+                    @foreach (var x in TramitesConsultados){
+                        <div class="detalle-tramite">
+                            <span>Id del trámite: @x.Id</span>
+                            <span>|Id del expediente: @x.ExpedienteId</span>
+                            <span>|Etiqueta del trámite: @x.EtiquetaTramite</span>
+                            <span>|Contenido: @x.Contenido</span>
+                            <span>|Fecha de creación: @x.FechaCreacion</span>
+                            <span>|Fecha de modificación: @x.FechaModificacion</span>
+                            <span>|Id del usuario modificador: @x.IdUsuarioModificador |</span>
+                            <hr style="border: 1px solid black;">
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+    
+    <div class="contenedor-botones">
+        @if (permisoAltaTramite) {
+            <button class="boton-inicio" @onclick="SetAltaTramite">Dar de alta</button>
+        }
+        @if (permisoBajaTramite) {
+            <button class="boton-inicio" @onclick="SetBajaTramite">Dar de baja</button>
+        }
+        @if (permisoModificacionTramite) {
+            <button class="boton-inicio" @onclick="SetModificarTramite">Modificar</button>
+        }
+        <button class="boton-inicio" @onclick="SetConsultarE">Consultar por etiqueta</button>
+        <button class="boton-inicio" @onclick="RefreshPage">Recargar Tramites</button>
+    </div>
+    
+    
+</section>
+
+@code{
+    private List<Tramite>? tramites;
+    private bool permisoAltaTramite = false;
+    private bool permisoBajaTramite = false;
+    private bool permisoModificacionTramite = false;
+    [Parameter] public string? IdUsuario { get; set; }
+    private int userId;
+    private int _expedienteId;
+    private string? operacion;
+    private string? _contenido;
+    private EtiquetaTramite.Etiquetas _etiqueta;
+    private Excepcion ventanaExcepcion = null!;
+    private int _idTramiteABajar;
+    private EtiquetaTramite.Etiquetas _etiquetaModificada;
+    private int _idTramiteAModificar;
+    private string? _contenidoAModificar;
+    private EtiquetaTramite.Etiquetas _etiquetaConsultada;
+    private List<Tramite>? TramitesConsultados;
+    private void SetOperacion(string nuevaOperacion) {
+        operacion = nuevaOperacion;
+    }
+
+    protected override void OnInitialized()
+    {
+        userId = int.Parse(IdUsuario!);
+        Usuario user = usuarioConsultaId.Ejecutar(userId!);
+        List<string> permisos = usuarioConsultaPermisos.Ejecutar(userId!);
+        if (permisos.Contains("TramiteAlta")) permisoAltaTramite = true;
+        if (permisos.Contains("TramiteBaja")) permisoBajaTramite = true;
+        if (permisos.Contains("TramiteModificacion")) permisoModificacionTramite = true;
+        CargarTramites();
+    }
+
+    private void CargarTramites(){
+        tramites = tramiteConsultaTodos.Ejecutar();
+    }
+    
+    public void ConsultarEtiqueta(){
+        try{
+            TramitesConsultados = tramiteConsultaEtiqueta.Ejecutar(_etiquetaConsultada!);
+        }catch(RepositorioException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message); 
+        }
+     }
+
+    private void DarAltaTramite(){
+        try{
+            string etiquetaString = _etiqueta.ToString();
+            tramiteAlta.Ejecutar(_expedienteId!,_contenido!,etiquetaString!,userId!);
+            RefreshPage();
+        }catch(ValidacionException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message); 
+        }
+        catch(AutorizacionException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+    }
+
+    private void DarBajaTramite(){
+        try{
+            tramiteBaja.Ejecutar(_idTramiteABajar!,userId!);
+            RefreshPage();
+        }catch(RepositorioException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message); 
+        }
+        catch(AutorizacionException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+    }
+
+     public void ModificarTramite(){     
+        try{
+            tramiteModificacion.Ejecutar(_idTramiteAModificar!,_contenidoAModificar!,_etiquetaModificada!,userId!);
+            RefreshPage();
+        }
+        catch(RepositorioException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message); 
+        }
+        catch(AutorizacionException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+        catch(ValidacionException ex){
+            ventanaExcepcion.CargarYMostrar(ex.Message);
+        }
+    }
+
+    private void SetAltaTramite(){
+        operacion = "Alta";
+    }
+
+    private void SetBajaTramite(){
+        operacion = "Baja";
+    }
+
+    private void SetModificarTramite(){
+        operacion = "Modificacion";
+    }
+
+    private void SetConsultarE(){
+        operacion = "ConsultarE";
+    }
+
+    private void RefreshPage(){
+        Navigation.NavigateTo($"/tramites/{IdUsuario}", forceLoad: true);
+    }
+}
